@@ -1,0 +1,1328 @@
+
+#lesson 2 对象
+
+[TOC]
+
+##对象
+
+###对象基础
+
+**对象创建的方式总共有哪些？**
+
+声明（文字）形式和构造形式
+
+- 对象字面量 var x = { xx: xx , aa: aaa }
+- 构造函数 new Object( )
+
+一般而言，对象有另一个对象——原型。
+- 原型中包含了各种属性，根据原型构造出来的对象就可以看出包含了相应的属性。
+- 根据没有任何属性的对象，如 null ， 构造出来的对象就是无原型的对象？是否可以使用 prototype 属性对其设置原型属性呢？
+- 简单的对象直接以 Object.prototype 为原型
+
+唯一的区别是，在文字声明中你可以添加多个 键 / 值对，但是在构造形式中你必须逐个添加属性。
+（在prototype中，如果使用字面量形式，即文字语法形式的话，就会覆盖原本的原型对象，还会丢失了 constructor 属性（需要在新的原型中显性声明）。所以一般动态地用构造形式逐个添加属性，但对于原型对象而已，不必重新new一个新对象的，直接在原来obj.prototype上添加属性即可）
+
+**对象有哪些子类型？这些类型与基本数据类型有何区别和联系？**
+
+
+	* String
+	* Number
+	* Boolean
+	* Object
+	* Function
+	* Array
+	* Date
+	* RegExp
+	* Error
+
+- 注意字符串字面量和字符串对象的区别：
+	- 原始值（简单数据类型的值） "I am a string" 并不是一个对象，它只是一个字面量，并且是一个不可变的值。
+	- 如果要在这个字面量上执行一些操作，比如获取长度、访问其中某个字符等，那需要将其转换为 String 对象
+	- 在必要时语言会自动把字符串字面量转换成一个 String 对象，也就是说你并不需要 显式创建一个对象。
+	- 现象：当对字符串进行属性或方法访问时：（即使是字符串字面量）我们都可以直接在字符串字面量上访问属性或者方法
+	- 原因：引擎自动把字面量转换成 String 对象，所以可以访问 String 对象的属性和方法。
+
+- 对象的子类型的存在形式：
+
+|子类型 |文字形式   |构造形式 |转换   |
+|:----:|:-------:|:------:|:-----:|
+|string(String)|YES|YES|在必要时语言会自动把字面量转换成一个对象形式|
+|number(Number)|YES|YES|同上
+|boolean(Boolean)|YES|YES|同上
+|Object|YES|YES|无论使用文字形式还是构造形式，都是对象，不是字面量|
+|Array|YES|YES|同上
+|Function|YES|YES|同上
+|RegExp|YES|YES|同上
+|Date|NO|YES|
+|undefined|YES|NO|
+|null|YES|NO|
+
+
+--------------------------------------
+
+###属性
+
+对象的内容是由一些存储在特定命名位置的（任意类型的）值组成的， 我们称之为属性。
+
+**对象的内容是否存储在对象内部？**
+
+在引擎内部，这些值的存储方式是多种多样的，一般并不会存在对象容器内部。存储在对象容器内部的是这些属性的名称，它们就像指针（从技术角度 来说就是引用）一样，指向这些值真正的存储位置。
+
+曾经有个困惑：（它们真正的存储位置是怎样的？？数组呢？函数呢？如果是直接写出来的文字形式呢？它们也是对象而不是字面量，对象都是怎么存储的？都是引用类型值——）
+
+回答：每个引用类型值的访问是按指针访问的，其对应的指针存储在栈内存中，对应堆内存中的一个引用类型值，引用类型值中的键值对对应是属性名以及属性值——引用类型值和基本类型值，并使用属性名来引用那些值。这些值仍然按照其本身类型存储在对应的内存中，如果访问属性的时候，就会根据属性名来查找到对应的值，做相应的处理。对引用类型值的修改是将其指针改动（内存地址变了），指向了另外一些引用类型值或基本类型值，仍使用当初的属性名来引用。当对某个属性使用 delete 的时候，从该对象中删去属性名的引用。如果对象不存在了，那么其所有的属性名也就不在了，其属性名的引用也无效了，原本保存的各种值所占的内存空间就会被回收了。
+
+**属性访问的方式**
+
+- **访问对象内容的两种方式的差异在哪里？**
+
+.a“属性访问”（最常见 的术语）和 ["a"]“键访问”
+它们访问的是同一个位置，并且会返回相同的值
+差异：
+* 点操作符要求属性名满足标识符的命名规范，而 [".."] 方括号语法 可以接受任意 UTF-8/Unicode 字符串作为属性名
+* 由于 [".."] 语法使用字符串来访问属性，所以可以在程序中使用变量构造这个字符串
+
+
+**可计算的属性名**
+ 
+myObject[..] 这种属性访问语 法让我们可以通过表达式来计算属性名。
+ 如可以使用 myObject[ prefix + name] 。但是使用文字形式来声明对象时这样做是不行的。
+
+ ★★★ 特别注意这种方式中的双引号或单引号的开闭，曾经因为这种问题导致变量名没用了，计算不出正确的属性名。要确保变量名的使用不会与字符串的双引号相串。
+
+【ES6】增加了可计算属性名，可以在文字形式中使用[ ]包裹一个表达式来当做属性名。
+
+	```javascript
+	
+	var prefix = "foo";
+	var myObject = {
+	     [prefix + "bar"]:"hello",
+	     [prefix + "baz"]: "world"
+	};
+	myObject["foobar"]; // hello
+	myObject["foobaz"]; // world
+
+
+- **在对象中，属性名永远都是字符串**
+	- 如果你使用 string （字面量）以外的其他值作为属性 名，那它首先会被转换为一个字符串。
+	- 即使是数字也不例外：
+		* 虽然在数组下标中使用的的确是数字
+		* 但是在对象属性名中数字会被转换成字符串
+		* 数组：
+			* 数组也支持 [] 访问形式，数组期望的是数值下标
+			* 值存储的位置（通常被称为索引 index ）是整数
+			* 数组可以添加命名属性，但数组的 length 值并未发 生变化。
+		* 数组和普通的对象都根据其对应的行为和用途进行了优化，所以最好 只用对象来存储**键 / 值对**，只用数组来存储**数值下标 / 值对**。
+
+- **有原型的对象的属性访问有覆盖特性**（参考##原型###覆盖与继承一节）
+
+可以类比作用域链中变量查找的遮蔽作用，但不完全等同，区别还是蛮大的。
+当对一个对象属性进行访问的时候，会首先查找对象自身的属性，如果找不到，会查找对象的原型对象，如果也找不到，会向上一直查找原型链。如果最终都没有找到的话，会返回`undefined`。
+而，变量如果在作用域链最顶端也查找不到，会隐形声明一个全局变量（非严格模式下），而在严格模式下，会报错 `ReferenceError`。
+
+-------------
+
+####属性与方法
+
+所有的访问都是属性访问。
+当然那些属性引用函数的也被称为方法。
+
+**函数被一个属性引用或者本身就是在对象中声明的，那它是否属于一个对象？**
+
+JavaScript 的语法规范这样区分：
+>从技术角度来说，函数永远不会“属于”一个对象，所以把对象内部引用的函数称为“方法”似乎有点不妥。
+
+**对象内部的函数是怎么存储的？**
+
+函数本质上也是一个对象，是一个引用类型值。
+因此，函数不能存储在对象内部的，按照引用类型值的存储方式来存储。
+
+--------------
+
+ ★★★ 调用对象内的函数，假定称之为方法调用。那么其作用域如何？
+ 在对象内直接声明的函数该如何定位？
+ 
+这种类型的函数中声明的变量又如何与其他函数声明的变量联系？作用域规则如何规定？
+
+作为方法调用。而全局中的函数调用，实际可以看成是全局对象的方法调用。
+
+函数有两个作用-副作用、无副作用（返回值）-- 参考函数一章
+函数有很多层面（对象中的函数、全局中的函数、函数中的函数、用来创建对象的函数--构造函数、延伸了作用域的函数 -- call、apply 方法调用）
+
+延伸作用域的函数 -- 通过使用 call、apply 方法调用，将其执行环境（context）换到某个对象上面。（我觉得，此时这个对象有点类似于作用域。）
+
+**函数与对象**有着微妙的关系。
+
+（**待补充**）
+
+--------------
+
+**从 this 引用发生隐式绑定看对象内部的函数**
+
+有些函数具有 this 引用（在函数内部使用了 this 参数），有时候这些 this 确实会指向调用位置的对象引用（但不是作用域）。
+但是这种用法从本质上来说并没有把一个函数变成一个“方法”，因为 this 是在运行时根据调用位置动态绑定的，所以函数和对象的关系最多也只能说是间接关系。
+
+当对象的属性值是一个表达式的时候，无论返回值是什么类型，每次访问对象的属性就是属性访问。如果属性访问返回的是一个函数，那它也并不是一个“方法”。属性访问返回的函数和其他函数没有任何区别，都是一个函数值。
+
+	```javascript
+	function foo() {
+     console.log( "foo" );
+	}
+
+	var someFoo = foo; // 对 foo 的变量引用
+
+	var myObject = {
+     someFoo: foo
+	};
+	
+> 以下输出各个标识符的值。可以看到，someFoo 和 myObject.someFoo 只是对于同一个函数的不同引用，并不能说明这个函数是特别的或者“属于”某个对象（感觉上，这个函数是属于全局对象的，作为一个普通函数来说）。
+
+	```javascript
+	foo; // function foo(){..}
+	someFoo; // function foo(){..}
+	myObject.someFoo; // function foo(){..}
+
+如果 `foo()` 定义时在内部有一个 `this` 引用，那这两个函数引用的唯一区别就是 `myObject.someFoo` 中的 `this` 会被隐式绑定到一个对象 `myObject` ，而 `foo` 直接调用会发生 默认绑定，非严格模式下`this`将被绑定到全局对象上（其实也就是在 `window(global)`这个执行环境上进行调用，与一般的对象调用函数一致）。
+
+对于在对象中声明的函数，使用一个新的全局变量去引用它：
+
+	```javascript
+	var myObject = {
+     foo: function() {
+          console.log( "foo" );
+     }
+	};
+
+	var someFoo = myObject.foo;
+	
+> 以下输出各个标识符的值。
+
+	```javascript
+	
+	someFoo; // function foo(){..}
+	
+	myObject.foo; // function foo(){..}
+
+对于赋值操作而言，
+
+> “ = ” 运算希望它的左操作数是一个左值：一个变量或者对象属性（或数组元素）。它的右操作数可以是任意类型的任意值。赋值表达式的值就是右操作数的值。 —— [犀牛书，page81](https://book.douban.com/subject/10549733/)
+
+右操作数`myObject.foo`的值，它其实是一个引用，因此返回的是引用值，即是目标函数。然后在其后再加一个`()`函数调用操作符，因此就是调用了目标函数。使用的应该是默认绑定。但是注意，默认绑定不一定就是绑定到全局上下文，在严格模式下`this`绑定到`undefined`。
+
+同样地，区别在于
+如果 ` myObject.foo` 在对象中声明时在内部有一个 `this` 引用，那这两个函数引用的唯一区别就是 `myObject.someFoo` 中的 `this` 会被隐式绑定到一个对象 `myObject` ，而 `someFoo` 直接调用会发生 默认绑定，非严格模式下`this`将被绑定到全局对象上（其实也就是在 `window(global)`这个执行环境上进行调用，与一般的对象调用函数一致）。
+
+通常，会因为这种间接引用而使原本预想的`this`隐式绑定丢失了。
+
+**结论**
+
+无论哪种引用形式都不能称之为“方法”。**JavaScript的函数永远都不会“属于” 对象** —— 最保险的说法可能是，“函数”和“方法”在 JavaScript 中是可以互换的。
+
+ ★★★ 存储问题可以参考###属性一节的回答。
+ 
+-----------------
+
+####属性描述符（desrciptor）
+
+在 ES5 之前，JavaScript 语言本身并没有提供可以直接检测属性特性的方法，比如判断属性是否是只读。
+
+从 ES5 开始，所有的属性都具备了属性描述符。属性的特性可以通过属性描述符来控制。
+
+从ECMA-262 第五版开始，在定义只有内部才用的特性（attribute）时，描述了属性的各种特征。定义这些特性是为了实现 JavaScript 引擎用的，在 JavaScript 中不能直接访问它们的。
+
+为了表示特性是内部值，规范中应该把它们放入两对方括号中间，例如 [[Enumerable]] 
+
+ECMAScript 有两种属性：数据属性和访问器属性。
+
+**属性描述符的创建**
+
+在创建普通属性时属性描述符会使用默认值，我们也可以使用`defineProperty(..)`给 myObject 添加了一个普通的属性并显式指定了一些特性或者也可以用来修改一个已有属性（如果它是 configurable ）。
+`defineProperties(..)`添加并显式指定多个属性的一些特性或修改多个属性的特性。（示例来自高程p142）
+
+支持这两个方法的浏览器有**IE9+、FireFox 4+、Safari 5+、Opera 12+ 和 Chrome**
+即只有支持ECMAScript 5的浏览器才能使用这两个方法。
+
+	```javascript
+	var book = {};
+        
+    Object.defineProperties(book, {
+        _year: {
+            value: 2004
+        },
+        
+        edition: {
+            value: 1
+        },
+        
+        year: {            
+            get: function(){
+                return this._year;
+            },
+            
+            set: function(newValue){
+                if (newValue > 2004) {
+                    this._year = newValue;
+                    this.edition += newValue - 2004;
+                }                  
+            }            
+        }        
+    });
+       
+    book.year = 2005;
+    alert(book.edition);   //2
+
+**数据属性**
+
+数据属性包含一个数据值的位置。在这个位置可以读取和写入值。
+
+数据属性有4个描述其行为的特性。
+
+- [[configurable]] （可配置，true ）控制该属性是否会出现在对象的属性枚举（for..in 循环）中
+- [[enumerable]] （可枚举，true ）只要属性是可配置的，就可以使用 defineProperty(..) 方法来修改属性描述符
+- [[writable]] （可写，true） writable 决定是否可以修改属性的值。
+- [[value]]（数据）默认值为 `undefined`。
+
+----------------------------------
+
+- **各特性的功能和注意事项**
+
+1. [[writable]]
+	- 如果设置为false，又去修改属性的值，一般，对于属性值的修改静默失败（silently failed）。在严格模式下，这种方法会出错`TypeError`错误表示我们无法修改一个不可写的属性。）
+	- 如果要 和 writable:false 一致的话，你的 setter 被调用时应当抛出一个`TypeError`错误
+2. [[configurable]]
+	- 单向操作：把 configurable 修改成 false 是单向操作，无法撤销（即，不能再设置为true了。）
+		- 设置完[configurable: false]之后再次使用`defineProperty(..)`会产生一个 `TypeError`错误
+		- 不管是不是处于严格模式，尝试修改一个不可配置的属性描述符都会出错
+		- 除了无法修改， configurable:false 还会禁止删除这个属性，因为属性是不可配置的。
+		- 例外：即便属性是 configurable:false ， 我们还是可以把 writable 的状态由 `true` 改为 `false` ，但是无法由 `false` 改为 `true` 。
+		- value依然可以改动，因为这是由writable决定的。
+3. [[enumerable]]
+	- 默认都是`true`，如果你不希望某些特殊属性出现在枚举中，那就把它设置成 `enumerable: false` 。
+	- 可枚举性：「可枚举」就相当于「可以出现在对象属性 的遍历中」
+	- 详见####「检测属性」、「遍历属性」和「原型的污染」
+- 注意：在数组上应用 `for..in` 循环有时会产生出人意料的结果，因为这种枚举不仅会包含所有数值索引，还会包含所有**可枚举属性**。最好只在对象上应用`for..in`循环，如果要遍历数组就使用传统的`for`循环来遍历数值索引。
+
+
+**访问器属性**
+
+访问器属性不包含数据值；它们包含一对 `getter`和`setter`函数，不过这两个函数都不是必需的。
+
+对于访问描述符来说，JavaScript 会忽略它们的 `value` 和 `writable` 特性，取而代之的是关心 `set` 和 `get` （还有 `configurable` 和 `enumerable` ）特性。
+
+四个特性：
+
+- [[configurable]]：
+	- 表示能否通过 `delete` 删除属性从而重新定义属性，能否修改属性的特性，或者能否把属性修改为数据属性。
+	- 直接在对象上定义的属性，这个特性的默认值为 `true`
+- [[enumerable]]：
+	- 表示能否通过 `for-in` 循环返回属性。
+	- 直接在对象上定义的属性，这个特性的默认值为 `true`
+- [[get]]：
+	- 在读取属性时调用的函数。
+	- 默认值为 `undefined`
+- [[set]]：
+	- 在写入属性时调用的函数。
+	- 默认值为 `undefined`
+
+**为什么要有`getter` 和 `setter`？**
+
+>对象默认的 [[Put]] 和 [[Get]] 操作（稍后介绍，下一节**作者注）分别可以控制属性值的设置和获取。
+>在 ES5 中可以使用 getter 和 setter 部分改写默认操作，但是只能应用在**单个属性**上，无法应用在整个对象上。  —— 《你不知道的 JavaScript (上卷)》p117
+
+在读取访问器属性时，会调用`getter`函数，这个函数负责返回有效的值；
+在写入访问器属性时，会调用`setter`函数，这个函数负责决定如何处理数据。
+在对象中，读取和修改属性时会自动调用这些函数。
+
+**访问器属性值不能直接定义吗？**
+
+可以。虽然高程第三版p141说不能直接定义访问器属性，只能用 `Object.defineProperty()` 来定义。但是好像最新的版本是可以的。
+
+《你不知道的 JavaScript （上卷）》 p190
+
+字面量对象语法定义访问器属性：
+
+	```javascript
+	var myObject = {
+		// define a getter for `a`
+		get a() {
+			return 2;
+		}
+	};
+	myObject.a; // 2
+
+`Object.defineProperty()` 定义访问器属性：
+
+	```javascript
+	
+	Object.defineProperty(
+		myObject,	// target
+		"b",		// property name
+		{			// descriptor
+			// define a getter for `b`
+			get: function(){ return this.a * 2 },
+	
+			// make sure `b` shows up as an object property
+			enumerable: true
+		}
+	);
+
+不管是对象文字语法中的 `get a() { .. }`，还是 `Object.defineProperty(..)` 中的显式定义，二者都会在对象中创建一个不包含值的属性，对于这个属性的访问会自动调用一个隐藏函数，它的返回值会被当作属性访问的返回值。
+
+如果只定义了获取器但没有定义设置器， JavaScript 会简单地忽略所有的属性修改操作，无法通过赋值操作来改变属性值。
+
+为了让属性更合理，还应当定义 setter，和你期望的一样，setter 会覆盖单个属性默认的[[Put]] （也被称为赋值）操作。通常来说 getter 和 setter 是成对出现的（只定义一个的话通常会产生意料之外的行为）：
+
+	```javascript
+	var myObject = {
+		// define a getter for `a`
+		get a() {
+			return this._a_;
+		},
+	
+		// define a setter for `a`
+		set a(val) {
+			this._a_ = val * 2;
+		}
+	};
+	
+	myObject.a = 2;
+	
+	myObject.a; // 4
+
+使用访问器属性的常见方式就如下面例子所示：
+—— 即设置一个属性的值会导致其他属性发生变化。
+
+	```javascript
+	var book = {
+	          _year: 2004,
+	          edition: 1
+	      };
+        
+    Object.defineProperty(book, "year", {
+         get: function(){
+             return this._year;
+         },
+         set: function(newValue){
+         
+             if (newValue > 2004) {
+                 this._year = newValue;
+                 this.edition += newValue - 2004;
+             
+             }
+         }
+     });
+     
+     book.year = 2005;
+     alert(book.edition);   //2
+
+-----------------
+
+#####给对象设置属性，有几种可能性？
+
+首先先了解下 **属性访问是如何工作的？**
+
+ **[[GET]] & [[PUT]]**
+
+- [[Get]]  属性的访问
+在语言规范中， myObject.a 在 myObject 上实际上是实现了 `[[Get]]` 操作（有点像函数调用： `[[Get]] (..)` ）
+ 1. 对象默认的内置 `[[Get]]` 操作首先在对象中查找是否有名称相同的属性，
+如果找到就会返回这个属性的值。
+2. 如果没有找到名称相同的属性，按照 `[[Get]]` 算法的定义会执行另外一种非常重要的行为——遍历可能存在的 `[[Prototype]]` 链，也就是原型链）。
+3. 如果无论如何都没有找到名称相同的属性，那 [[Get]] 操作会返回值 `undefined` 。
+
+	```javascript
+	
+	var myObject = {
+		a: undefined
+	};
+	
+	myObject.a; // undefined
+	myObject.b; // undefined
+
+从返回值的角度来说，这两个引用没有区别——它们都返回了 `undefined` 。然而，尽管乍看之下没什么区别，实际上底层的 `[[Get]]` 操作对 myObject.b 进行了更复杂的处理（甚至去遍历可能存在的 myObject 的`[[Prototype]]`链）。
+
+由于仅根据返回值无法判断出到底变量的值为 `undefined` 还是变量不存在，所以 `[[Get]]`操作返回了 `undefined` 。这个时候，需要通过`hasOwnProperty(..)`来判断对象的属性的**存在性**。
+
+** 这种方法和访问变量时是不一样的。如果你引用了一个当前词法作用域中不存在的
+变量，并不会像对象属性一样返回 `undefined` ，而是会抛出一个 `ReferenceError` 异常（严格模式下），或者隐式声明一个全局变量（非严格模式下）。
+
+- [[PUT]]
+
+[[Put]] 被触发时的情况更情况——
+
+[[Put]] 被触发时，实际的行为取决于许多因素，包括对象中是否已经存在这个属性（这
+是最重要的因素）。
+
+如果已经存在这个属性， [[Put]] 算法大致会检查下面这些内容。
+
+1. 属性是否是访问器属性？如果是并且存在 `setter` 就调用 `setter`。
+2. 属性的数据描述符中 `writable` 是否是 `false` ？如果是，在非严格模式下静默失败，在严格模式下抛出 `TypeError` 异常。
+3. 如果都不是，将该值设置为属性的值。（`writable: true`）
+
+如果对象中不存在这个属性， `[[Put]]` 操作会更加复杂，参考第 5 章对`[[Prototype]]`链的介绍。
+
+等待**后面补充**——
+
+
+---------------------------
+
+#####读取属性的特性
+
+使用ECMAScript 5 的`Object.getOwnPropertyDescriptor()`方法，可以取得给定属性的描述符。
+
+	```javascript
+	var book = {};
+        
+    Object.defineProperties(book, {
+         _year: {
+             value: 2004
+         },
+         
+         edition: {
+             value: 1
+         },
+         
+         year: {            
+             get: function(){
+                 return this._year;
+             },
+             
+             set: function(newValue){
+                 if (newValue > 2004) {
+                     this._year = newValue;
+                     this.edition += newValue - 2004;
+                 }                  
+             }            
+         }        
+     });
+        
+     var descriptor = Object.getOwnPropertyDescriptor(book, "_year");
+     alert(descriptor.value);          //2004
+     alert(descriptor.configurable);   //false
+     alert(typeof descriptor.get);     //"undefined"
+	
+	 var descriptor = Object.getOwnPropertyDescriptor(book, "year");
+     alert(descriptor.value);          //undefined
+     alert(descriptor.enumerable);     //false
+     alert(typeof descriptor.get);     //"function"
+
+------------------------------
+
+####对象的不可变性
+
+可变与不可变，决定了一个对象是否可以灵活地扩展 —— 这是对象扩展和联结的前提。
+
+不变性主要用到的特性是`[[writable]]`和`[[configrable]]`。
+
+**浅不变形**，只会影响目标对象和它的**直接属性**（存储在对象中可以直接修改的属性）。如果目标对象引用了**其他对象**（数组、对象、函数，等），其他对象的内容不受影响，仍然是可变的。
+
+**直接属性**VS**自身属性**
+
+问题还是因为引用类型值的存储。
+通常所说的「自身属性」是指对象自身的属性，也可叫「实例属性」。
+
+如果一个属性的值是个对象，则这个对象中的属性不属于顶层对象的属性，不属于「直接属性」，这个对象也不存储在顶层对象中的（存储问题）。
+
+所以还是用「直接属性」来描述顶层对象的属性比较合适，但是可以等同于「自身属性」。
+
+
+**深不可变**，不只影响目标对象和它的直接属性。
+
+ ★★★ 这个不可变性与 Python 中的 list 等数据结构有得一比。
+
+1. 基础：得到一个常量属性
+	- 结合 writable:false 和 configurable:false 就可以创建一个真正的常量属性（不可修改、 重定义或者删除）
+	- 该操作目标是对象的属性
+	- 如果尝试修改属性，不管是不是严格模式下，都将会抛出 `TypeError` 错误。
+	- 基本类型属性（存储基本类型值的属性）的属性值不能再被修改，而复杂类型属性（存储引用类型值的属性）不允许修改引用地址，但是其属性值还是可以被修改、扩展和删除的。
+	- 只有一个常量属性并不代表这是一个真正的常量对象
+2. 不同级别的不可变（操作目标是一个现有对象）
+	1. 禁止扩展 `Object.preventExtensions(..)`
+		- 禁止一个对象添加新属性并且保留已有属性
+		- 只能阻止一个对象不能再添加新的自身属性，仍然可以为该对象的原型添加属性，但 `__proto__` 属性的值也会不能修改。
+		- 这个操作是单向操作，不可恢复的。( If there is a way to turn an extensible object to a non-extensible one, there is no way to do the opposite in ECMAScript 5. )
+		- `[[Extensible]]` 值 从 `true` 设置为了 `false`
+		- 可以修改任何现有（可修改）属性的值(writable)
+		- 在非严格模式下，创建属性 b 会静默失败。在严格模式下，将会抛出 TypeError 错误。
+	2. 密封 `Object.seal(..)`
+		- 这个方法实际上会在一个现有对象上调用`Object.preventExtensions(..) `并把所有现有属性标记为 `configurable: false`
+		- 密封对象是指那些不能添加新的属性，不能删除已有属性，以及不能修改已有属性的可枚举性、可配置性、可写性*，但可能可以修改已有属性的值的对象。
+		- 遵循 `configurable` 特性的规则：不可逆，还有其他特性
+			- 密封之后不仅不能添加新属性，也不能重新配置或者删除任何现有属性，虽然还可以修改属性的值( 如果 writable 为 `true` ) 
+			- *可以使用`Object.definedProperty(..)`来配置原来 `writable: true` 的属性，使其 `writable: false`。但不可倒转过来，不能使`writable: false` 的属性变成 `writable: true`。
+
+ 3. 冻结 `Object.freeze(..)`
+	 - 这个方法实际上会在一个现有对象上调用 `Object.seal(..)`  并把所有数据属性标记为 `writable:false` ，这样就无法修改它们的值
+	 - 冻结对象是指那些不能添加新的属性，不能修改已有属性的值，不能删除已有属性，以及不能修改已有属性的可枚举性、可配置性、可写性的对象。也就是说，这个对象永远是不可变的。该方法返回被冻结的对象。
+	 - 这个方法是你可以应用在对象上的级别最高的不可变性，它会禁止对于**对象本身及其任意直接属性**的修改（不过就像我们之前说过的，这个对象引用的其他对象是不受影响的，其他对象如果没有冻结的话也还是可变的）
+	 - `Object.freeze(..)`的一切操作只在顶级对象属性上生效。如果一个属性的值是个对象，则这个对象中的属性是可以修改的，除非它也是个冻结对象。
+	 - 任何尝试修改该对象的操作都会失败，可能是静默失败，也可能会抛出异常（严格模式中）。
+	 - 数据属性的值不可更改，访问器属性（有`getter`和`setter`）也同样（但由于是函数调用，给人的错觉是还是可以修改这个属性）—— （访问器属性中`getter`与`setter`可否修改由`configurable`决定，在这里，冻结对象中直接属性中`configurable`都被设置为`false`了）。
+	 - 如该方法 MDN 的描述所述，倘若一个对象的属性是一个对象，那么对这个外部对象进行冻结，内部对象的属性是依旧可以改变的，这就叫**浅冻结**，若把外部对象冻结的同时把其所有内部对象甚至是内部的内部无限延伸的对象属性也冻结了，这就叫**深冻结**。
+
+ 4. 深度冻结 
+	 - 首先在这个对象上调用 `Object.freeze(..)`
+	 - 然后遍历（递归调用）它引用的所有对象并在这些对象上调用 `Object.freeze(..)`
+	 - 当然没有包括对象的原型对象的冻结
+	 - 小心！这样做有可能会在无意中冻结其他（共享）对象
+
+	```javascript
+	
+	var Obj = {
+	     name: 'jack',
+	     extraInfo: {
+	         age: 23 
+	     }
+	}
+	
+	Object.freeze(Obj); 
+	
+	Obj.extraInfo.age = 80;
+	
+	console.log(Obj.extraInfo.age ); //80
+
+深度冻结对象的代码实现：
+	
+	```javascript
+	var constantize = (obj) => {
+	     Object.freeze(obj);
+	     Object.keys(obj).forEach(
+	          (key,i) => {
+	               if (typeof obj[key] === 'object') {
+	                    constantize(obj[key]);
+	               }
+	
+	          }
+	     );
+	}
+
+**对象常量**
+
+【ES6】const
+
+* **基本类型常量：**一旦声明赋值，就不能再被修改
+* **复杂类型常量：**只是不允许修改引用地址，但是其属性还是可以被修改、扩展和删除的。
+
+调用preventEcxtensions(..)、seal(..)、freeze(..)实际上都是一环扣一环，最高级的是freeze(..)。要得到一个真正的常量对象，需要对freeze(..)进行递归调用。
+
+关于错误：从seal(..)开始，只要去重新配置或删除任何现有属性，都会报错`TypeError`，不管是不是严格模式。（因为configurable: false）
+
+
+--------------------------------------
+
+####检测属性 —— 存在性
+检测对象是否包含某个属性。
+
+1. `in` 运算符
+	- 判断对象是否包含某个属性，会从对象的实例属性（自身属性）、继承属性（存在对象原型中的属性）里进行检测
+2. `Obj.hasOwnProperty(propertyName) `
+	- 判断对象是否拥有一个指定名称的实例属性（自身属性），不会检查继承属性（存在对象原型中的属性）
+3. `Obj.propertyIsEnumerable(propertyName)` —— 这个还顺便检测了可枚举性
+	- 判断指定名称的属性是否为实例属性（自身属性）并且是可枚举的(可用for/in循环枚举)
+	
+`in` 和 `hasOwnProperty(..)` 的区别在于是否查找` [[Prototype]] `链
+
+** 所有的普通对象都可以通过对于 `Object.prototype` 的委托来访问`hasOwnProperty(..)` ，但是有的对象可能没有连接到 `Object.prototype`（通过 `Object.create(null)` 来创建）。在这种情况下，形如`myObejct.hasOwnProperty(..)`就会失败。
+
+这时可以使用一种更加强硬的方法来进行判断： `Object.prototype.hasOwnProperty.call(myObject,"a")` ，它借用基础的 `hasOwnProperty(..)`方法并把它显式绑定到 myObject 上。
+
+** 可以通过`!hasOwnProperty(..) && .. in object` 这样的条件来判断属性是否在原型对象上。
+
+---------------------------
+
+####遍历属性——遍历
+即遍历对象的实例属性、继承属性。
+
+1.  `for / in` 语句块
+	- 遍历对象可枚举的实例属性（自身属性）和继承属性（对象原型上的属性）
+2. `Object.keys(obj)`
+	- 返回一个数组，包含对象**可枚举**的实例属性（自身属性）名称
+3. `Object.getOwnPropertyNames(obj)`
+	- 返回一个数组，包含对象的所有实例属性（自身属性）名称。包括可枚举和不可枚举的
+4. `Obj.propertyIsEnumerable(propertyName)` 
+- 判断检查给定的属性名是否直接存在于对象中（不在原型链上）并且是可枚举的(可用for/in循环枚举)
+
+`Object.keys(..)` 和 `Object.getOwnPropertyNames(..)` 都只会查找对象直接包含的属性，前者会将自身可枚举属性列举出来放在一个数组中，后者将自身属性悉数列举出来，放在一个数组中。
+
+对存在性和枚举性的总结：
+
+`in`和 `hasOwnProperty(..)` 的区别在于是否查找` [[Prototype]] `链，然而， `Object.keys(..)`和 `Object.getOwnPropertyNames(..) `都只会查找对象直接包含的属性。
+
+**取得可枚举的所有属性、包括对象的整条`[[Prototype]] `链**（但不知道要干嘛？）
+
+（目前）并没有内置的方法可以获取 in 操作符使用的属性列表（对象本身的属性以
+及 `[[Prototype]]` 链中的所有属性）。不过你可以**递归遍历**某个对象的整条`[[Prototype]] `链并保存每一层中使用 `Object.keys(..) `得到的属性列表——只包含可枚举属性。
+
+#####遍历属性的值
+
+`for..in` 循环可以用来遍历对象的可枚举属性列表（包括 `[[Prototype]]` 链）。但是如何遍历属性的值呢？
+
+**数组方法**
+
+1. 经典方法：标准的 for 循环
+
+	```javascript
+		var myArray = [1, 2, 3];
+		for (var i = 0; i < myArray.length; i++) {
+		console.log( myArray[i] );
+		}
+		// 1 2 3
+
+这实际上并不是在遍历值，而是遍历下标来指向值，如 myArray[i] 。
+
+2. 数组的辅助迭代器 [ ES5 ]
+包括`forEach(..)`、`every(..)`和`some(..)`。
+每种辅助迭代器都可以接受一个回调函数并把它应用到数组的每个元素上，唯一的区别就是它们对于回调函数返回值的处理方式不同。
+
+- `forEach(..)`会遍历数组中的所有值并忽略回调函数的返回值
+- `every(..)`会一直运行直到回调函数返回 false （或者“假”值）
+- `some(..)` some(..) 会一直运行直到回调函数返回 true （或者“真”值）。
+
+`every(..)`和 `some(..)` 中特殊的返回值和普通 `for` 循环中的 `break` 语句类似，它们会提前终止遍历。
+
+3. `for..of`循环语法[ ES6 ] （取自YDJS（上卷）p106 + p122）
+直接遍历值而不是数组下标。
+
+	```javascript
+	var myArray = [ 1, 2, 3 ];
+	for (var v of myArray) {
+		console.log( v );
+	}
+	// 1
+	// 2
+	// 3
+
+**`for..of`的原理**
+
+`for..of` 循环首先会向被访问对象请求一个迭代器对象，然后通过调用迭代器对象的`next()` 方法来遍历所有返回值。
+因为数组中定义了迭代器，有内置的 `@@iterator` ，因此 for..of 可以直接应用在数组上。
+
+	```javascript
+	var myArray = [ 1, 2, 3 ];
+	var it = myArray[Symbol.iterator]();
+	it.next(); // { value:1, done:false }
+	it.next(); // { value:2, done:false }
+	it.next(); // { value:3, done:false }
+	it.next(); // { done:true }
+
+** [ ES6 ] 符号（`Symbol`），一种新的基础数据类型，包含一个不透明且无法预测的值（从技术角度来说就是一个字符串）。一般来说你不会用到符号的实际值（因为理论上来说在不同的 JavaScript 引擎中值是不同的），所以通常你接触到的是符号的名称，比如 `Symbol.Something`。
+在这里，我们使用 ES6 中的符号 `Symbol.iterator` 来获取对象的 `@@iterator` 内部属性 。引用类似 iterator 的特殊属性时要使用符号名，而不是符号包含的值。此外，虽然看起来很像一个对象，但是 `@@iterator`本身并不是一个迭代器对象，而是一个返回迭代器对象的函数
+
+如你所见，调用迭代器的 `next()`方法会返回形式为 `{ value: .. , done: .. }` 的值，`value` 是当前的遍历值， `done` 是一个布尔值，表示是否还有可以遍历的值。注意，和值“3”一起返回的是 `done:false` ，乍一看好像很奇怪，你必须再调用一次`next()` 才能得到`done:true`，从而确定完成遍历。
+
+**对象的属性值**
+
+1. 经典方法：`for..in` + 手动属性访问
+对每一个键进行遍历，然后访问每一个属性。
+
+	```javascript
+	for (key in myObject){
+		console.log(myObject[key])
+	}
+
+使用` for..in `遍历对象是无法直接获取属性值的，因为它实际上遍历的是对象中的所有可枚举属性，你需要手动获取属性值。
+
+**为什么这种方法不可靠？**
+遍历数组下标时采用的是数字顺序（ for 循环或者其他迭代器），但是遍历对
+象属性时的顺序是不确定的，在不同的 JavaScript 引擎中可能不一样。因此，
+在不同的环境中需要保证一致性时，一定不要相信任何观察到的顺序，它们
+是不可靠的。
+
+2. 借用`for..of`循环语法
+
+和数组不同，普通的对象没有内置的 `@@iterator` ，所以无法自动完成 `for..of`遍历。 
+可以通过给任何想遍历的对象定义`@@iterator`来借用 `for..of`循环
+
+	```javascript
+	var myObject = {
+		a: 2,
+		b: 3
+	};
+	Object.defineProperty( myObject, Symbol.iterator, {
+		enumerable: false,
+		writable: false,
+		configurable: true,
+		value: function() {
+			var o = this;
+			var idx = 0;
+			var ks = Object.keys( o );
+			return {
+				next: function() {
+					return {
+						value: o[ks[idx++]],
+						done: (idx > ks.length)
+					};
+				}
+			};
+		}
+	} );
+	// 手动遍历 myObject
+	var it = myObject[Symbol.iterator]();
+	it.next(); // { value:2, done:false }
+	it.next(); // { value:3, done:false }
+	it.next(); // { value:undefined, done:true }
+	// 用 for..of 遍历 myObject
+	for (var v of myObject) {
+		console.log( v );
+	}
+	// 2
+	// 3
+
+使用 `Object.defineProperty(..)` 定义了我们自己的 `@@iterator` （主要是为了让它不可枚举）。
+此外，也可以直接在定义对象时进行声明，比如 `var myObject = {a:2, b:3, [Symbol.iterator]: function() { /* .. */ } } `。
+
+`for..of` 循环每次调用 `myObject` 迭代器对象的 `next()` 方法时，内部的指针都会向前移动并返回对象属性列表的下一个值（再次提醒，需要注意遍历对象属性 / 值时的顺序）。
+
+代码中的遍历非常简单，只是传递了属性本身的值。不过只要你愿意，当然也可以在自定义的数据结构上实现各种复杂的遍历。
+
+对于用户定义的对象来说，结合 for..of 循环和自定义迭代器可以组成非常强大的对象操作工具。
+
+比如说，一个 Pixel 对象（有 x 和 y 坐标值）列表可以按照距离原点的直线距离来决定遍历顺序，也可以过滤掉“太远”的点，等等。只要迭代器的 `next()` 调用会返回 `{ value: .. } 和 { done: true }` ，ES6 中的 `for..of` 就可以遍历它。
+
+实际上，你甚至可以定义一个“无限”迭代器，它永远不会“结束”并且总会返回一个新
+值（比如随机数、递增值、唯一标识符，等等）。你可能永远不会在 `for..of` 循环中使用这样的迭代器，因为它永远不会结束，你的程序会被挂起：
+
+	```javascript
+	var randoms = {
+		[Symbol.iterator]: function() {
+			return {
+				next: function() {
+					return { value: Math.random() };
+				}
+			};
+		}
+	};
+	
+	var randoms_pool = [];
+	
+	for (var n of randoms) {
+		randoms_pool.push( n );
+		// 防止无限运行！
+		if (randoms_pool.length === 100) break;
+	}
+
+这个迭代器会生成「无限个」随机数，因此我们添加了一条 `break` 语句，防止程序被挂起。
+
+**总结**
+
+你可以使用 ES6 的 `for..of` 语法来遍历数据结构（数组、对象，等等）中的值， `for..of` 会寻找内置或者自定义的 `@@iterator` 对象并调用它的 `next()` 方法来遍历数据值。
+
+---------------------------
+
+####对象的复制
+
+复制一个对象就是复制一个对象的内容，但经过探讨，对象的内容纷繁复杂，存储的位置更是不定。如何复制一个对象？
+
+需要分层次探讨——复制与拷贝一个意思
+
+- **深拷贝：**连对象中的引用对象也都复制一遍，与原来的引用对象不全等 ( === )
+- **浅拷贝：**只赋值对象中的基本值，保持对象中的引用对象不变。
+
+
+**为啥要用深拷贝？如何实现？**
+
+在很多情况下，我们都需要给变量赋值，给内存地址赋予一个值，但是在赋值引用值类型的时候，只是共享一个内存区域，导致赋值的时候，还跟之前的值保持一致性。
+
+问题都是**引用值类型数据相互影响**。
+
+要实现一个深拷贝函数，当然离不开对数据类型的判断——
+
+那么，如何判断是何种类型的引用值？
+
+	```javascript
+	function type(obj) {
+	  var toString = Object.prototype.toString;
+	  var map = {
+	      '[object Boolean]'  : 'boolean', 
+	      '[object Number]'   : 'number', 
+	      '[object String]'   : 'string', 
+	      '[object Function]' : 'function', 
+	      '[object Array]'    : 'array', 
+	      '[object Date]'     : 'date', 
+	      '[object RegExp]'   : 'regExp', 
+	      '[object Undefined]': 'undefined',
+	      '[object Null]'     : 'null', 
+	      '[object Object]'   : 'object'
+	  };
+	  return map[toString.call(obj)];
+	}
+
+
+实现一个深拷贝函数，对于非引用值类型的数值，直接赋值，而对于引用值类型（object）还需要再次遍历，递归赋值。
+
+	```javascript
+	function deepClone(data){
+		var t = type(data), o, i, ni;
+		
+		if(t === 'array') {
+			o = [];
+		}else if(t === 'object'){
+			o = {};
+		}else{
+			return data;
+		}
+
+		if(t == 'array') {
+			for(i = 0; ni = data.length; i < ni; i++){
+				o.push(deepClone(data[i]));
+			}
+			return o;
+		}else if(t === 'object'){
+			for(i in data) {
+				o[i] = deepClone(data[i]);
+			}
+			return o;
+		}
+	}
+
+	
+对于function类型，这里是直接赋值的，还是共享一个内存值。这是因为函数更多的是完成某些功能，有个输入值和返回值，而且对于上层业务而言更多的是完成业务功能，并不需要真正将函数深拷贝。
+
+有时候保存了dom元素， 一不小心进行深拷贝，上面的深拷贝函数就缺少了对Element元素的判断。而判断Element元素要使用instanceof来判断。因为对于不同的标签，tostring会返回对应不同的标签的构造函数。
+
+	function type(obj) {
+	  var toString = Object.prototype.toString;
+	  var map = {
+	      '[object Boolean]'  : 'boolean', 
+	      '[object Number]'   : 'number', 
+	      '[object String]'   : 'string', 
+	      '[object Function]' : 'function', 
+	      '[object Array]'    : 'array', 
+	      '[object Date]'     : 'date', 
+	      '[object RegExp]'   : 'regExp', 
+	      '[object Undefined]': 'undefined',
+	      '[object Null]'     : 'null', 
+	      '[object Object]'   : 'object'
+	  };
+	  if(obj instanceof Element) {
+	        return 'element';
+	  }
+	  return map[toString.call(obj)];
+	}
+
+
+**请问上面的方法是否复制了对象的原型？**
+
+没有的。
+
+
+- **JSON实现：使用JSON对象的parse和stringify**
+
+JSON对象是ES5中引入的新的类型（支持的浏览器为IE8+），JSON对象parse方法可以将JSON字符串反序列化成JS对象，stringify方法可以将JS对象序列化成JSON字符串，借助这两个方法，也可以实现对象的深拷贝。
+
+	```javascript
+	//例1
+	var source = { name:"source", child:{ name:"child" } } 
+	var target = JSON.parse(JSON.stringify(source));
+	target.name = "target";  //改变target的name属性
+	console.log(source.name); //source 
+	console.log(target.name); //target
+	target.child.name = "target child"; //改变target的child 
+	console.log(source.child.name); //child 
+	console.log(target.child.name); //target child
+
+	//例2
+	var source = { name:function(){console.log(1);}, child:{ name:"child" } } 
+	var target = JSON.parse(JSON.stringify(source));
+	console.log(target.name); //undefined
+	
+	//例3
+	var source = { name:function(){console.log(1);}, child:new RegExp("e") }
+	var target = JSON.parse(JSON.stringify(source));
+	console.log(target.name); //undefined
+	console.log(target.child); //Object {}
+
+这种方法使用较为简单，可以满足基本的深拷贝需求，而且能够处理JSON格式能表示的所有数据类型，但是对于正则表达式类型、函数类型等无法进行深拷贝(而且会直接丢失相应的值)。它能正确处理的对象只有 Number, String, Boolean, Array, 扁平对象，即那些能够被 json 直接表示的数据结构。
+
+还有一点不好的地方是它会抛弃对象的constructor。也就是**深拷贝之后，不管这个对象原来的构造函数是什么，在深拷贝之后都会变成Object**。同时如果对象中存在循环引用的情况也无法正确处理。
+
+- **`jQuery.extend()` 方法实现**
+
+`jQuery的extend()`方法使用基本的递归思路实现了浅拷贝和深拷贝，但是这个方法也无法处理源对象内部循环引用，例如：
+
+	```javascript
+	var a = {"name":"aaa"};
+	var b = {"name":"bbb"};
+	a.child = b;
+	b.parent = a;
+	$.extend(true,{},a); //直接报了栈溢出。Uncaught RangeError: Maximum call stack size exceeded // --- a复制了b, b又引用了a
+
+	```javascript
+	jQuery.extend( [ deep ], target , object1 [, objectN... ] );
+- `jQuery.extend()`的用法介绍：
+	- deep 可选/Boolean类型指示是否深度合并对象，默认为false。如果该值为true，且多个对象的某个同名属性也都是对象，则该”属性对象”的属性也将进行合并。 （深度复制）
+	- target Object类型目标对象，其他对象的成员属性将被复制到该对象上。 object1 可选/Object类型第一个被合并的对象。 
+	- objectN 可选/Object类型第N个被合并的对象。
+
+- `jQuery.extend()`源码实现
+
+	```javascript
+		jQuery.extend = jQuery.fn.extend = function() { //给jQuery对象和jQuery原型对象都添加了extend扩展方法
+	  var options, name, src, copy, copyIsArray, clone, target = arguments[0] || {},
+	  i = 1,
+	  length = arguments.length,
+	  deep = false;
+	  //以上其中的变量：options是一个缓存变量，用来缓存arguments[i]，name是用来接收将要被扩展对象的key，src是改变之前target对象上每个key对应的value。
+	  //copy传入对象上每个key对应的value，copyIsArray判定copy是否为一个数组，clone是深拷贝中用来临时存对象或数组的src。
+	
+	  // 处理深拷贝的情况
+	  if (typeof target === "boolean") {
+	    deep = target;
+	    target = arguments[1] || {};
+	    //跳过布尔值和目标 
+	    i++;
+	  }
+	
+	  // 控制当target不是object或者function的情况
+	  if (typeof target !== "object" && !jQuery.isFunction(target)) {
+	    target = {};
+	  }
+	
+	  // 当参数列表长度等于i的时候，扩展jQuery对象自身。
+	  if (length === i) {
+	    target = this; --i;
+	  }
+	  for (; i < length; i++) {
+	    if ((options = arguments[i]) != null) {
+	      // 扩展基础对象
+	      for (name in options) {
+	        src = target[name];	
+	        copy = options[name];
+	
+	        // 防止永无止境的循环，这里举个例子，如var i = {};i.a = i;$.extend(true,{},i);如果没有这个判断变成死循环了
+	        if (target === copy) {
+	          continue;
+	        }
+	        if (deep && copy && (jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)))) {
+	          if (copyIsArray) {
+	            copyIsArray = false;
+	            clone = src && jQuery.isArray(src) ? src: []; // 如果src存在且是数组的话就让clone副本等于src否则等于空数组。
+	          } else {
+	            clone = src && jQuery.isPlainObject(src) ? src: {}; // 如果src存在且是对象的话就让clone副本等于src否则等于空数组。
+	          }
+	          // 递归拷贝
+	          target[name] = jQuery.extend(deep, clone, copy);
+	        } else if (copy !== undefined) {
+	          target[name] = copy; // 若原对象存在name属性，则直接覆盖掉；若不存在，则创建新的属性。
+	        }
+	      }
+	    }
+	  }
+	  // 返回修改的对象
+	  return target;
+	};
+
+`jquery中extend()`不是复制引用，而是创建了新的对象，是一个`jQuery`对象。`jQuery的extend()`方法使用基本的递归思路实现了浅拷贝和深拷贝，但是这个方法也无法处理源对象内部循环引用。
+
+
+**浅拷贝的实现**
+
+对于浅拷贝而言，可以理解为只操作一个共同的内存区域！
+
+如果直接操作这个共享的数据，不做控制的话，会经常出现数据异常，被其它部分更改。所以应该不要直接操作数据源，给数据源封装一些方法，来对数据来进行CURD操作。
+
+- 直接赋值，用一个新的变量来引用想要拷贝的那个对象即可
+- 简单的引用赋值
+- `Object.assign()` 方法
+
+**为什么可以直接引用赋值还要用一个专门的方法来实现呢？这个方法内部是什么原理？**
+
+区别是，第一种是复制引用，另一个是创造了一个新的对象，然后再复制引用。
+
+
+【ES6】用`Object.assign(..)`实现浅拷贝 ——
+
+`Object.assign(..)` 方法的第一个参数是目标对象，之后还可以跟一个 或多个源对象。它会遍历一个或多个源对象的所有**可枚举**（enumerable : true） 的自有属性（owned properties ）并把它们复制（使用 `=` 操作符赋值）到目标对象，最后返回目标对象。
+
+- 因为`Object.assign(..)`使用 ` = ` 操作符来赋值，所以无法复制引用值。
+- 因为`Object.assign(..)`使用 ` = ` 操作符来赋值， 所以源对象属性的一些特性（比如 writable ）不会被复制到目标对象。——因此这些特性都会转成默认该有的特性值，默认true。
+- 如果目标对象中的属性具有相同的键，则属性将被源中的属性覆盖。后来的源的属性将类似地覆盖早先的属性。
+- 注意，在属性拷贝过程中可能会产生异常，比如目标对象的某个只读属性和源对象的某个属性同名，这时该方法会抛出一个 `TypeError` 异常，拷贝过程中断，已经拷贝成功的属性不会受到影响，还未拷贝的属性将不会再被拷贝。
+-  ★★★ 底层：该方法使用源对象的 [ [ Get ] ] 和目标对象的 [ [ Set ] ]，所以它会调用相关 getter 和 setter。因此，它分配属性而不是复制或定义新的属性。[1]
+- 假如是拷贝属性定义到原型里，包括它们的可枚举性，那么应该使用 `Object.getOwnPropertyDescriptor()` 和 `Object.defineProperty()` 。
+- `String`类型和 `Symbol`类型的属性都会被拷贝。
+
+------------------------------------------
+
+####属性与变量
+
+这一小节很好玩。
+
+>问题：
+	* 词法作用域的变量
+	* 对象的属性
+这二者区别和联系？形式上？更多的不同在何处？
+
+
+**属性绑定的规则与变量绑定的规则类似。**
+
+
+
+**属性访问的规则与变量访问的规则存在哪些不同呢？**
+
+什么是通过变量来访问属性？
+>作者：知乎用户
+链接：https://www.zhihu.com/question/23393098/answer/24445524
+来源：知乎
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+以下是JavaScript：the Definition Guide中的一段，说得很清楚了：
+
+>When you use the . operator to access a property of an object, however, **the name of the property is expressed as an identifier**. Identifiers must be typed literally into your JavaScript program; they are not a datatype, so they **cannot be manipulated** by the program.
+
+>On the other hand, when you access a property of an object with the [] array notation,
+the name of the property is expressed as a string. Strings are JavaScript datatypes, so
+**they can be manipulated and created while a program is running**. So, for example, youcan write the following code in JavaScript:
+
+		···javascript
+		var addr = "";
+		for(i=0; i < 4; i++)
+		addr += customer["address" + i] + '\n';
+
+>This code reads and concatenates the 'address0' , 'address1' , 'address2' , and 'address3' properties of the customer object.
+
+
+在YDJS中，——
+
+　[注意]词法作用域查找只会查找一级标识符，如果代码引用了foo.bar.baz，词法作用域查找只会试图查找foo标识符，找到这个变量后，对象属性访问规则分别接管对bar和baz属性的访问。
+（这一段很重要）
+
+变量的声明才能在作用域链中注册一个标识符，才能被查找到，之后才是对象属性的访问。
+
+	var a=3;
+	var object = { 
+	  a:2, 
+	  run: function() {
+	             alert(a); //a=3;
+	  } 
+	}; 
+	object.run();
+
+js里以函数为作用域划分，object里面的a并不是一个单独的变量，要访问它只能通过object.a。（*访问属性只能用两种方法，点语法和方括号语法。而变量是一个标识符，分配地址。）
+
+遮蔽：
+在多层的嵌套作用域中可以定义同名的标识符，这叫作“遮蔽效应”，内部的标识符“遮蔽”了外部的标识符
+而对于对象属性的访问规则则有对象自有属性“遮蔽” 了对象原型属性。
+
+ 
+**有什么特殊的例子能看到对象与作用域的关系很密切？（只是特殊的例子）**
+
+**with 语句**  将对象转为一个新的作用域
+
+
+（一直觉得函数就是特殊的一个对象，是可以被调用的对象，因此函数所特有的作用域特性其实也可以看成是对象中声明属性的特性，但函数可以向上访问，属性却只能局限在某个对象中，互不相干。要访问这个对象的变量都必须通过对象来连接。）
+
+
+
+* 全局环境下的变量——其实转化为属性。
+
+二者之间的转化：
+　全局变量会自动为全局对象的属性，因此可以不直接通过全局对象的词法名称，而是间接地通过对全局对象属性的引用来对其进行访问
+
+window.a
+
+词法名称？变量？属性？
+
+**在作用域链中是如何的呢？？**（更系统的参考 作用域链详解）-- Link[####属性与方法](####属性与方法) #这里无法提供跳转————！！！
+
+
+
+** 想知道这部分跟词法作用域规则有何关系》》？？？
+
+
+注意，这种方法和访问变量时是不一样的。
+******* `[[Get]]` 操作在当前对象中查找不到有名称相同的属性，也遍历可能存在的 `[[Prototype]]` 链找不到名称相同的属性，就会返回值 `undefined`
+
+原型链——是向上查找——
+
+作用域链也是向上查找的——
+*******如果你引用了一个当前词法作用域中不存在的 变量(identifier-标识符)，并不会像对象属性一样返回`undefined` ，而是会抛出一个 `ReferenceError` 异常：
+
+----------------------------------------
+
+
+##扩展与关联
+
+
+###构造函数
+
+构造函数调用：
+* new 关键字
+* 新对象（通过关键字 new 创建的对象称之为 构造函数的实例）
+* 指向新对象的变量 this 
+* 返回值：除非构造函数显式地返回了另一个对象的值，否则构造函数的调用会返回这个新创建的对象
+
+构造函数继承（包含原型链的继承）：
+
+
+* 新的构造函数中通常会调用旧的构造函数 
+	* 使用 call 方法将新对象作为旧构造函数的 this 值
+	* 调用构造函数时，可以认为所有旧的对象类型中包含的字段都已经添加到了新对象中。
+
+* 构造函数的原型继承旧的原型对象 
+	* 新类型实例都可以访问旧原型中的属性
+	* 也可以将一些属性添加到新的原型中并覆盖旧原型中的属性，但不修改旧原型
+
+构造函数与实例的继承：
+
+* 构造函数的 prototype 属性是实例的原型
+	* 在新建对象的时候自动获得
+	* 利用原型将特定类型的所有属性放在原型中共享
+	* 构造函数自身的实际原型其实是 Function.prototype
+
+
+**问题：构造函数是怎样接入原型链的？其实际原型与其 prototype 属性是什么关系？**
+
+对于构造函数来说，（实际上，对所有函数适用），都会自动获得一个名为 prototype 属性。在默认情况下，该属性是一个普通的派生自 Object.protytpe 的空对象。而所有使用特定构造函数创建的对象都会将构造函数的 prototype 属性作为其原型。
+
+这种方式（构造函数建立对象与原型之间的关联 -- 直接通过 prototype 属性来获取）与将原型对象作为对象的属性（并使用 Object.getPrototypeOf 获取属性）的方式存在区别。
+
+实际上，构造函数本身的实际原型是 Function.prototype ，而构造函数的prototype 属性则是其所创建的实例的原型，而非构造函数自身的原型（Function.prototype）。
+要理解函数实际原型与实例的原型（构造函数的 prototype 属性）的关系：
+这个 prototype 属性是可以通过后期设置产生修改变化的，而本身实际原型是由其创建者所给予的。很微妙的关系。
+
+
+**还有哪些关系在原型链中需要注意的？**
+
+
+
+
+
+
+####instanceof 运算符
+
+用于了解某个对象是否继承自某个特定构造函数。
+特别是用于鉴别某个对象是何种引用类型。（[1,2,3] instanceof Array）
+> - typeof 检查给定变量的语言类型或者说数据类型
+> - instanceof 检查到底是哪种引用类型
+
+
+该运算符可以用于检查所有继承类型。
+
+
+- **实例 -- 构造函数**
+- **构造函数 -- 其构造函数**
+
+####constructor
+
+- **constructor 的丢失：**
+
+
+
+###原型
+
+####覆盖与继承（个性与个性 —— 私有与共享的区别）
+
+可以用来描述实例的特殊属性，同时又可以让普通对象获得标准的值。
+
+####多态
+
+利用多态来操作不同类型的值，只要这些值支持所需的接口即可。
+
+
+
+####原型的污染
+
+使用 for / in 循环 遍历对象中所有的参数，并使用 in 操作符测试对象是否包含对应的属性。
+
+这些方式都会到对象的原型中寻找属性，也就是说遍历的属性不止有对象自身的属性。
+
+而 JavaScript 会区分属性的「可枚举」与「不可枚举」属性。
+
+我们使用 `Object.defineProperty` 函数定义自己的不可枚举属性，该函数允许我们在创建属性时控制属性类型（特性）-- enumerable 「是否可枚举」这个属性。	
+
+我们创建并赋予对象的所有属性（默认）都是可枚举的。而 `Object.prototype` 中的标准属性都不可枚举，因此这些标准属性不会出现在 `for..in` 循环中。
+
+使用 `hasOwnProperty(..)` 可以知道对象自身是否包含某个属性，而不会搜索其原型链。 
+
+`Object.keys` 函数会返回一个数组，该数组中存储了对象中的可枚举的自身属性名称（只收集自身属性名, 不收集继承自原型链上的。）。
+
+
+####无原型的对象
+
+对象创建的时候？
+
+应该都是有原型的。
+
+那么如果不需要原型呢？
+
+使用 Object.create 函数并根据特定原型来创建对象，并传递 null 作为原型，创建一个无原型对象。
+
+此时可以安全地使用 for / in 循环了。
+
+
+
+###继承与委托：对象与对象之间的关系（对象的扩展与关联）
+
+有层级上的区别 —— 类？子类？实例 ——
+
+####继承
+
+使用继承可以花很少的力气来造出与当前类型相似的数据类型，其中这两个数据结构只有细微差别。
+
+1. 新的构造函数通常会调用旧的构造函数（使用 call 方法将新对象作为旧构造函数的 this 值）—— 当调用构造函数时，我们可以认为所有旧的对象类型中包含的字段都已经添加到了新对象中。
+2. 构造函数的原型继承旧的原型对象 —— 所有新类型实例都可以访问旧原型中的属性。
+3. 将一些属性添加到新的原型中并有选择地覆盖这些属性原本的定义。（特殊化这个类）
+
+
+
+####委托
+
+
+
+
+
+
+
+
+
+####类理论与原型
+
+
+
+
+
+
+####类 - 数据类型 - 泛类 与 实例
+
+
+
+
+####总结
+
+**继承与创新的模式**
+
+* 实现的对象之间的差别微乎其微，那么可以直接使用原型来创建新的类型
+	* 而新类型则通过集成原有类型的原型来实现
+	* 并使用新的构造函数来调用原有类型中的构造函数
+
+* 得到一个类似于旧类型的新类型后
+	* 可以在原有类型当中添加属性或在新的类型中覆盖属性
+
+**委托模式**
+
+
+
+
+
+
+##对象接口
+
+
+* 为对象添加接口，用户只需通过接口来使用对象即可。
+* 对象中的其他细节被封装了起来，隐藏在接口之后为用户提供所需功能。
+* 多态：不同的对象也可以实现相同的接口，只不过不同的对象提供了不同的内部实现细节罢了
+
+接口就是提供一些方法来操作和返回一些与内部存储的属性相关的东西。
+
+
+###思想总结
+
+封装与多态可以用来分隔代码，减少整个程序的耦合性，而继承则使类型紧密耦合，增加了耦合性。
+
+更好的扩展类型的方式是组合，比如基于一个对象构建 UnderlinedCell 时，只是简单地将该对象存储为其属性并在 UnderlinedCell 的方法中，将函数调用转发给内部存储的对象，而这种方法就是组合。
+
+> 倒是没有见过这种组合方式——
+
+
+
+[1]:https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
