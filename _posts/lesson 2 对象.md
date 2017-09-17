@@ -1,5 +1,14 @@
 
-#lesson 2 对象
+---
+layout:     post
+title:      "lesson 2 对象"
+subtitle:   " \"Everything about Object\""
+date:       2017-09-17 21:05:00
+author:     "Ron"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    - JavaScript 
+---
 
 [TOC]
 
