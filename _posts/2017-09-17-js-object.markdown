@@ -10,8 +10,6 @@ tags:
     - JavaScript 
 ---
 
-[TOC]
-
 ##对象
 
 ###对象基础
